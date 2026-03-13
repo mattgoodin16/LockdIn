@@ -1,4 +1,4 @@
-import { PrismaClient, TrainingLevel, GoalType, DietaryPreference, EquipmentType, NotificationTone } from "@prisma/client";
+import Prisma from "@prisma/client"; // Prisma 7.x default export
 import { hash } from "bcryptjs";
 import { generateNutritionPlan } from "../src/lib/logic/nutrition-generator";
 import { generateWorkoutSplit, prescriptionForLevel } from "../src/lib/logic/workout-generator";
@@ -6,7 +6,10 @@ import { milestoneTemplates } from "../src/lib/logic/milestones";
 import { generateGroceryList } from "../src/lib/logic/grocery";
 import { calculateAdherenceScore } from "../src/lib/logic/adherence";
 
-const prisma = new PrismaClient();
+const prisma = new Prisma.PrismaClient();
+
+// Destructure enums from Prisma object
+const { GoalType, TrainingLevel, DietaryPreference, EquipmentType, NotificationTone } = Prisma;
 
 const exerciseSeed = [
   // ... your exerciseSeed array unchanged ...
@@ -46,7 +49,7 @@ async function seedExercises() {
   }
 }
 
-async function seedUser(email: string, name: string, goalType: GoalType) {
+async function seedUser(email: string, name: string, goalTypeEnum: Prisma.GoalType) {
   const passwordHash = await hash("LockdinDemo123", 10);
   const user = await prisma.user.upsert({
     where: { email },
@@ -86,9 +89,9 @@ async function seedUser(email: string, name: string, goalType: GoalType) {
     update: {},
     create: {
       userId: user.id,
-      goalType,
+      goalType: goalTypeEnum,
       timelineWeeks: 16,
-      targetWeightKg: goalType === GoalType.FAT_LOSS ? 82 : null,
+      targetWeightKg: goalTypeEnum === GoalType.FAT_LOSS ? 82 : null,
       targetWorkoutDaysPerWeek: 4,
       sessionLengthMinutes: 50,
       trainingLevel: TrainingLevel.INTERMEDIATE,
@@ -124,13 +127,12 @@ async function seedUser(email: string, name: string, goalType: GoalType) {
     },
   });
 
-  // Nutrition, grocery, workout, adherence, progressCheckIn, logs, milestones, weekly recap
   const nutrition = generateNutritionPlan({
     weightKg: 89,
     heightCm: 180,
     age: 31,
     sex: "MALE",
-    goalType,
+    goalType: goalTypeEnum,
     trainingLevel: TrainingLevel.INTERMEDIATE,
     activityLevel: "active",
   });
@@ -144,12 +146,18 @@ async function seedUser(email: string, name: string, goalType: GoalType) {
   const grocery = generateGroceryList({
     calories: nutrition.calories,
     proteinGrams: nutrition.proteinGrams,
-    dietaryPreference: DietaryPreference.OMNIVORE,
+    dietaryPreference: "OMNIVORE",
     style: "balanced",
   });
 
   await prisma.groceryList.create({
-    data: { userId: user.id, nutritionPlanId: nutritionPlan.id, style: "balanced", weekOf: new Date(), ...grocery },
+    data: {
+      userId: user.id,
+      nutritionPlanId: nutritionPlan.id,
+      style: "balanced",
+      weekOf: new Date(),
+      ...grocery,
+    },
   });
 
   const split = generateWorkoutSplit(goal.workoutsPerWeek, goal.goalType);
@@ -204,7 +212,7 @@ async function seedUser(email: string, name: string, goalType: GoalType) {
     streakDays: 19,
   });
 
-  // ... other logs, milestones, weekly recap unchanged ...
+  // ... rest of the seed logic unchanged ...
 
   return user;
 }
@@ -213,7 +221,12 @@ async function seedSocial(users: { id: string }[]) {
   if (users.length < 2) return;
   for (let i = 1; i < users.length; i++) {
     await prisma.friendConnection.upsert({
-      where: { senderId_receiverId: { senderId: users[0].id, receiverId: users[i].id } },
+      where: {
+        senderId_receiverId: {
+          senderId: users[0].id,
+          receiverId: users[i].id,
+        },
+      },
       update: { status: "ACCEPTED" },
       create: { senderId: users[0].id, receiverId: users[i].id, status: "ACCEPTED" },
     });
@@ -222,19 +235,22 @@ async function seedSocial(users: { id: string }[]) {
 
 async function main() {
   await seedExercises();
+
   const users = await Promise.all([
     seedUser("demo@lockdin.app", "Demo User", GoalType.FAT_LOSS),
     seedUser("aria@lockdin.app", "Aria", GoalType.MUSCLE_GAIN),
     seedUser("kai@lockdin.app", "Kai", GoalType.STRENGTH),
   ]);
+
   await seedSocial(users);
 }
 
 main()
-  .then(async () => prisma.$disconnect())
+  .then(async () => {
+    await prisma.$disconnect();
+  })
   .catch(async (e) => {
     console.error(e);
     await prisma.$disconnect();
     process.exit(1);
-  });
   });
