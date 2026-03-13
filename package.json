@@ -3,12 +3,8 @@
     "@auth/prisma-adapter": "^2.11.1",
     "@base-ui/react": "^1.2.0",
     "@hookform/resolvers": "^5.2.2",
-<<<<<<< HEAD
     "@prisma/adapter-pg": "^7.4.2",
     "@prisma/client": "^7.5.0",
-=======
-    "@prisma/client": "^7.4.2",
->>>>>>> 82c3c542b8200138d4e250877136bcfe9a71e3b1
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
@@ -33,12 +29,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
-<<<<<<< HEAD
     "prisma": "^7.5.0",
-    "tailwindcss": "^4",
-=======
-    "prisma": "^7.4.2",
->>>>>>> 82c3c542b8200138d4e250877136bcfe9a71e3b1
     "tsx": "^4.21.0",
     "tailwindcss": "^4",
     "typescript": "^5"
