@@ -1,9 +1,7 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 import {
-  DietaryPreference,
   EquipmentType,
   GoalType,
-  NotificationTone,
   PrismaClient,
   TrainingLevel,
 } from "@prisma/client";
@@ -187,7 +185,7 @@ async function seedUser(email: string, name: string, goalType: GoalType) {
       mobilityLimitations: ["ankle_mobility"],
       exercisesToAvoid: ["upright row"],
       recoveryConcerns: ["sleep_variability"],
-      dietaryPreference: DietaryPreference.OMNIVORE,
+      dietaryPreference: "OMNIVORE",
       foodDislikes: ["oysters"],
       foodAllergies: ["none"],
       mealFrequencyPreference: 3,
@@ -230,7 +228,7 @@ async function seedUser(email: string, name: string, goalType: GoalType) {
     update: {},
     create: {
       userId: user.id,
-      tone: NotificationTone.COACH,
+      tone: "COACH",
       preferredTime: "07:30",
       workoutReminder: true,
       nutritionReminder: true,
